@@ -276,30 +276,11 @@ We welcome contributions to make Lone Town even better! Please read our contribu
 - 📋 Community features
 - 📋 Global expansion
 
-## 🏆 Awards & Recognition
-
-- **Innovation in Dating Technology** - TechCrunch Disrupt 2024
-- **Best AI Integration** - Mobile App Awards 2024
-- **User Choice Award** - Google Play Store 2024
-
-## 📞 Support & Contact
-
-### Technical Support
-- **Email**: support@lonetown.app
-- **Documentation**: [docs.lonetown.app](https://docs.lonetown.app)
-- **Community**: [community.lonetown.app](https://community.lonetown.app)
-
-### Business Inquiries
-- **Partnerships**: partnerships@lonetown.app
-- **Press**: press@lonetown.app
-- **Investors**: investors@lonetown.app
 
 ## 👨‍💻 Developer
 
 **Jai Kumar Mishra**
 - **LinkedIn**: [www.linkedin.com/in/jai-kumar-mishra-0981641aa](https://www.linkedin.com/in/jai-kumar-mishra-0981641aa)
-- **GitHub**: [@jaikumarmishra](https://github.com/jaikumarmishra)
-- **Email**: jai.kumar.mishra@example.com
 
 ### About the Developer
 Jai Kumar Mishra is a passionate full-stack developer specializing in MERN stack technologies with expertise in AI integration and mobile app development. With a focus on creating meaningful digital experiences, Jai combines technical excellence with user-centered design to build applications that make a positive impact on people's lives.
