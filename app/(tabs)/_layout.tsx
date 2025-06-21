@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Heart, MessageCircle, User, Clock } from 'lucide-react-native';
+import { Heart, MessageCircle, User, Clock, Brain } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -37,6 +37,15 @@ export default function TabLayout() {
           title: 'Chat',
           tabBarIcon: ({ size, color }) => (
             <MessageCircle size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="insights"
+        options={{
+          title: 'Insights',
+          tabBarIcon: ({ size, color }) => (
+            <Brain size={size} color={color} />
           ),
         }}
       />

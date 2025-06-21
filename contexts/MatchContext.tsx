@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { supabase } from '@/lib/supabase';
 import { Match, Message, User, UserState } from '@/types';
 import { useAuth } from './AuthContext';
+import { useAI } from './AIContext';
 import { MatchingAlgorithm } from '@/lib/matchingAlgorithm';
 
 interface MatchContextType {
@@ -35,6 +36,7 @@ interface MatchProviderProps {
 
 export const MatchProvider: React.FC<MatchProviderProps> = ({ children }) => {
   const { user } = useAuth();
+  const { generateMatchFeedback } = useAI();
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
   const [matchedUser, setMatchedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -178,44 +180,56 @@ export const MatchProvider: React.FC<MatchProviderProps> = ({ children }) => {
   };
 
   const unpinMatch = async () => {
-    if (!user || !currentMatch) return;
+    if (!user || !currentMatch || !matchedUser) return;
 
-    // End the match
-    await supabase
-      .from('matches')
-      .update({
-        status: 'ended',
-        unpinned_by: user.id,
-        unpinned_at: new Date().toISOString()
-      })
-      .eq('id', currentMatch.id);
+    try {
+      // Generate AI feedback before ending the match
+      const matchDuration = new Date().getTime() - new Date(currentMatch.created_at).getTime();
+      const feedback = await generateMatchFeedback(user, matchedUser, currentMatch.message_count, matchDuration);
+      
+      // Store feedback for the user
+      console.log('Match feedback:', feedback);
+      
+      // End the match
+      await supabase
+        .from('matches')
+        .update({
+          status: 'ended',
+          unpinned_by: user.id,
+          unpinned_at: new Date().toISOString()
+        })
+        .eq('id', currentMatch.id);
 
-    // Set user to frozen state for 24 hours
-    const freezeUntil = new Date();
-    freezeUntil.setHours(freezeUntil.getHours() + 24);
+      // Set user to frozen state for 24 hours
+      const freezeUntil = new Date();
+      freezeUntil.setHours(freezeUntil.getHours() + 24);
 
-    await supabase
-      .from('users')
-      .update({
-        current_state: UserState.FROZEN,
-        freeze_until: freezeUntil.toISOString(),
-        match_id: null
-      })
-      .eq('id', user.id);
+      await supabase
+        .from('users')
+        .update({
+          current_state: UserState.FROZEN,
+          freeze_until: freezeUntil.toISOString(),
+          match_id: null
+        })
+        .eq('id', user.id);
 
-    // Give the other user a new match in 2 hours
-    const otherUserId = currentMatch.user1_id === user.id ? currentMatch.user2_id : currentMatch.user1_id;
-    const newMatchTime = new Date();
-    newMatchTime.setHours(newMatchTime.getHours() + 2);
+      // Give the other user a new match in 2 hours
+      const otherUserId = currentMatch.user1_id === user.id ? currentMatch.user2_id : currentMatch.user1_id;
+      const newMatchTime = new Date();
+      newMatchTime.setHours(newMatchTime.getHours() + 2);
 
-    // This would be handled by a background job in a real app
-    setTimeout(() => {
-      matchingAlgorithm.findMatch(otherUserId);
-    }, 2 * 60 * 60 * 1000);
+      // This would be handled by a background job in a real app
+      setTimeout(() => {
+        matchingAlgorithm.findMatch(otherUserId);
+      }, 2 * 60 * 60 * 1000);
 
-    setCurrentMatch(null);
-    setMatchedUser(null);
-    setMessages([]);
+      setCurrentMatch(null);
+      setMatchedUser(null);
+      setMessages([]);
+    } catch (error) {
+      console.error('Error unpinning match:', error);
+      throw error;
+    }
   };
 
   const canVideoCall = currentMatch?.video_unlocked || false;

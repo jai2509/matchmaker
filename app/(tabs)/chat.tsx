@@ -12,15 +12,18 @@ import {
 } from 'react-native';
 import { useMatch } from '@/contexts/MatchContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAI } from '@/contexts/AIContext';
 import { Message } from '@/types';
-import { Send, Video, VideoOff } from 'lucide-react-native';
+import { Send, Video, VideoOff, Sparkles } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 export default function ChatScreen() {
   const { user } = useAuth();
   const { currentMatch, matchedUser, messages, sendMessage, canVideoCall, matchProgress } = useMatch();
+  const { generateConversationStarter } = useAI();
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
+  const [loadingStarter, setLoadingStarter] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -67,6 +70,20 @@ export default function ChatScreen() {
         'Video Call Locked',
         `You need to exchange ${100 - matchProgress.messageCount} more messages within ${matchProgress.timeRemaining} to unlock video calling.`
       );
+    }
+  };
+
+  const handleGenerateStarter = async () => {
+    if (!user || !matchedUser) return;
+    
+    setLoadingStarter(true);
+    try {
+      const starter = await generateConversationStarter(user, matchedUser);
+      setMessageText(starter);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate conversation starter');
+    } finally {
+      setLoadingStarter(false);
     }
   };
 
@@ -135,6 +152,22 @@ export default function ChatScreen() {
           />
         </View>
       </View>
+
+      {messages.length === 0 && (
+        <View style={styles.starterContainer}>
+          <Text style={styles.starterTitle}>Start a meaningful conversation</Text>
+          <TouchableOpacity 
+            style={styles.starterButton}
+            onPress={handleGenerateStarter}
+            disabled={loadingStarter}
+          >
+            <Sparkles size={16} color="#6B73FF" />
+            <Text style={styles.starterButtonText}>
+              {loadingStarter ? 'Generating...' : 'Get AI Conversation Starter'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         ref={flatListRef}
@@ -234,6 +267,30 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#6B73FF',
     borderRadius: 2,
+  },
+  starterContainer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  starterTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1B23',
+    marginBottom: 12,
+  },
+  starterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
+    gap: 8,
+  },
+  starterButtonText: {
+    fontSize: 14,
+    color: '#6B73FF',
+    fontWeight: '500',
   },
   messagesList: {
     flex: 1,
